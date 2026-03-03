@@ -19,7 +19,10 @@ _needs_ssl = "neon.tech" in _raw_url or "sslmode=require" in _raw_url.lower()
 def _to_async(url: str) -> str:
     url = re.sub(r"^postgres(ql)?://", "postgresql+asyncpg://", url)
     if "+asyncpg" in url:
+        # asyncpg handles SSL via connect_args, not URL params — strip them
+        # to avoid conflicts (channel_binding is also unsupported by asyncpg)
         url = re.sub(r"[?&]channel_binding=[^&]*", "", url)
+        url = re.sub(r"[?&]sslmode=[^&]*", "", url)
     return url
 
 def _to_sync(url: str) -> str:
