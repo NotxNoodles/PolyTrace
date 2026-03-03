@@ -11,17 +11,25 @@ from sqlalchemy.orm import DeclarativeBase
 
 from app.config import settings
 
+_db_url: str = settings.database_url
+
+# create_async_engine requires the asyncpg driver, but Neon/Supabase
+# connection strings use plain "postgresql://" which resolves to psycopg2.
+if _db_url.startswith("postgresql://"):
+    _db_url = _db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+elif _db_url.startswith("postgres://"):
+    _db_url = _db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+
 connect_args: dict = {}
 
-# Neon and other cloud Postgres providers require SSL
-if "neon.tech" in settings.database_url or "ssl=true" in settings.database_url.lower():
+if "neon.tech" in _db_url or "ssl=true" in _db_url.lower():
     ssl_ctx = ssl.create_default_context()
     ssl_ctx.check_hostname = False
     ssl_ctx.verify_mode = ssl.CERT_NONE
     connect_args["ssl"] = ssl_ctx
 
 engine = create_async_engine(
-    settings.database_url,
+    _db_url,
     echo=False,
     pool_size=5,
     max_overflow=5,
