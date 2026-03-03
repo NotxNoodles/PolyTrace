@@ -25,7 +25,7 @@ export default function PriceOverlayChart({
     let disposed = false;
 
     (async () => {
-      const { createChart, LineSeries, HistogramSeries } = await import("lightweight-charts");
+      const { createChart } = await import("lightweight-charts");
 
       if (disposed || !containerRef.current) return;
 
@@ -60,8 +60,7 @@ export default function PriceOverlayChart({
       });
       chartRef.current = chart;
 
-      // Polymarket probability line (left axis feel, but we use right axis)
-      const polySer = chart.addSeries(LineSeries, {
+      const polySer = chart.addLineSeries({
         color: "#00f5a0",
         lineWidth: 2,
         priceFormat: { type: "price", precision: 4, minMove: 0.0001 },
@@ -79,7 +78,6 @@ export default function PriceOverlayChart({
         polySer.setData(polyData);
       }
 
-      // Spot price as second line series (normalized to [0..1] range for overlay)
       if (spotSeries.length > 0) {
         const spotMin = Math.min(...spotSeries.map((s) => s.l));
         const spotMax = Math.max(...spotSeries.map((s) => s.h));
@@ -92,7 +90,7 @@ export default function PriceOverlayChart({
           }))
           .sort((a: any, b: any) => a.time - b.time);
 
-        const spotSer = chart.addSeries(LineSeries, {
+        const spotSer = chart.addLineSeries({
           color: "#00d2ff",
           lineWidth: 2,
           lineStyle: 2,
@@ -102,7 +100,6 @@ export default function PriceOverlayChart({
         spotSer.setData(spotNormalized);
       }
 
-      // Volume histogram
       const volData = polySeries
         .filter((p) => p.vol != null && p.vol > 0)
         .map((p) => ({
@@ -113,7 +110,7 @@ export default function PriceOverlayChart({
         .sort((a: any, b: any) => a.time - b.time);
 
       if (volData.length > 0) {
-        const volSer = chart.addSeries(HistogramSeries, {
+        const volSer = chart.addHistogramSeries({
           priceFormat: { type: "volume" },
           priceScaleId: "vol",
         });
