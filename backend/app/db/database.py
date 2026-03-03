@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import ssl
 
 from sqlalchemy.ext.asyncio import (
@@ -11,25 +12,34 @@ from sqlalchemy.orm import DeclarativeBase
 
 from app.config import settings
 
-_db_url: str = settings.database_url
+_raw_url: str = settings.database_url
 
-# create_async_engine requires the asyncpg driver, but Neon/Supabase
-# connection strings use plain "postgresql://" which resolves to psycopg2.
-if _db_url.startswith("postgresql://"):
-    _db_url = _db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-elif _db_url.startswith("postgres://"):
-    _db_url = _db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+_needs_ssl = "neon.tech" in _raw_url or "sslmode=require" in _raw_url.lower()
+
+def _to_async(url: str) -> str:
+    url = re.sub(r"^postgres(ql)?://", "postgresql+asyncpg://", url)
+    if "+asyncpg" in url:
+        url = re.sub(r"[?&]channel_binding=[^&]*", "", url)
+    return url
+
+def _to_sync(url: str) -> str:
+    return re.sub(r"^postgres(ql)?(\+\w+)?://", "postgresql://", url)
+
+_async_url = _to_async(_raw_url)
+sync_database_url = _to_sync(_raw_url)
 
 connect_args: dict = {}
+sync_connect_args: dict = {}
 
-if "neon.tech" in _db_url or "ssl=true" in _db_url.lower():
+if _needs_ssl:
     ssl_ctx = ssl.create_default_context()
     ssl_ctx.check_hostname = False
     ssl_ctx.verify_mode = ssl.CERT_NONE
     connect_args["ssl"] = ssl_ctx
+    sync_connect_args["sslmode"] = "require"
 
 engine = create_async_engine(
-    _db_url,
+    _async_url,
     echo=False,
     pool_size=5,
     max_overflow=5,

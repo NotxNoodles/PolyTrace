@@ -114,9 +114,11 @@ def _poll_yfinance_sync() -> int:
     from sqlalchemy import create_engine
     from sqlalchemy.orm import Session
 
-    from app.config import settings as s
+    from app.db.database import sync_connect_args, sync_database_url
 
-    engine = create_engine(s.database_url_sync, pool_pre_ping=True)
+    engine = create_engine(
+        sync_database_url, pool_pre_ping=True, connect_args=sync_connect_args
+    )
     total = 0
 
     for ticker_symbol in YFINANCE_TICKERS:

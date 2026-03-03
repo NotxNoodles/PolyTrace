@@ -25,8 +25,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+asyncpg://polytrace:polytrace@db:5432/polytrace
-      DATABASE_URL_SYNC: postgresql://polytrace:polytrace@db:5432/polytrace
+      DATABASE_URL: postgresql://polytrace:polytrace@db:5432/polytrace
       CORS_ORIGINS: '["http://localhost:3000"]'
       LOG_LEVEL: INFO
     env_file:

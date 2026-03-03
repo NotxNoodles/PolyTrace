@@ -10,8 +10,6 @@ services:
     envVars:
       - key: DATABASE_URL
         sync: false
-      - key: DATABASE_URL_SYNC
-        sync: false
       - key: CORS_ORIGINS
         value: '["https://polytrace.vercel.app"]'
       - key: LOG_LEVEL

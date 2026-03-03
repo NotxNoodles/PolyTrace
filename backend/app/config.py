@@ -16,9 +16,6 @@ class Settings(BaseSettings):
 
     # ── Database ─────────────────────────────────────────
     database_url: str = (
-        "postgresql+asyncpg://polytrace:polytrace@localhost:5432/polytrace"
-    )
-    database_url_sync: str = (
         "postgresql://polytrace:polytrace@localhost:5432/polytrace"
     )
 
